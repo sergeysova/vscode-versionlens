@@ -8,23 +8,19 @@ export function nugetGetPackageVersions(packageName) {
   const httpRequest = require('request-light');
   const queryUrl = `${FEED_URL}?id=${packageName}&prerelease=true&semVerLevel=2.0.0`;
 
-  return new Promise(function (resolve, reject) {
-    httpRequest.xhr({ url: queryUrl })
-      .then(response => {
-        if (response.status != 200) {
-          reject({
-            status: response.status,
-            responseText: response.responseText
-          });
-          return;
-        }
+  return httpRequest.xhr({ url: queryUrl })
+    .then(response => {
+      if (response.status != 200) {
+        return Promise.reject({
+          status: response.status,
+          responseText: response.responseText
+        });
+      }
 
-        const pkg = JSON.parse(response.responseText);
-        if (pkg.totalHits == 0)
-          reject({ status: 404 });
-        else
-          resolve(pkg.data.reverse());
-      }).catch(reject);
-  });
+      const pkg = JSON.parse(response.responseText);
+      return pkg.totalHits == 0
+        ? Promise.reject({ status: 404 })
+        : pkg.data.reverse();
+    })
 
 }
